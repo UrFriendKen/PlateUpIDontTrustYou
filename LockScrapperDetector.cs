@@ -1,18 +1,21 @@
 ﻿using Kitchen;
+using KitchenMods;
+using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Entities;
 
 namespace KitchenIDontTrustYou
 {
-    public class NewLockScrapper : LockScrapper
+    public class NonHostDetector : GenericSystemBase, IModSystem
     {
-        EntityQuery Scrappers;
+        [StructLayout(LayoutKind.Sequential, Size = 1)]
+        public struct SNonHostPresent : IComponentData, IModComponent { }
+
         EntityQuery Players;
 
         protected override void Initialise()
         {
             base.Initialise();
-            Scrappers = GetEntityQuery(typeof(CFranchiseScrapper));
             Players = GetEntityQuery(typeof(CPlayer));
         }
 
@@ -20,16 +23,21 @@ namespace KitchenIDontTrustYou
         {
             using (NativeArray<CPlayer> players = Players.ToComponentDataArray<CPlayer>(Allocator.Temp))
             {
+                bool hasNonHost = false;
                 for (int i = 0; i < players.Length; i++)
                 {
                     if (!Helpers.IsHost(players[i]))
                     {
-                        base.EntityManager.AddComponent<CPreventUse>(Scrappers);
-                        return;
+                        hasNonHost = true;
+                        break;
                     }
                 }
+
+                if (!hasNonHost)
+                    Clear<SNonHostPresent>();
+                else if (!Has<SNonHostPresent>())
+                    EntityManager.CreateEntity(typeof(SNonHostPresent), typeof(CDoNotPersist));
             }
-            base.OnUpdate();
         }
     }
 }

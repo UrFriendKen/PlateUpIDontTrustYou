@@ -1,67 +1,93 @@
 ﻿using HarmonyLib;
-using Kitchen;
-using KitchenLib;
 using KitchenMods;
-using System;
-using System.Collections.Generic;
+using PreferenceSystem;
 using System.Reflection;
 using UnityEngine;
 
-// Namespace should have "Kitchen" in the beginning
 namespace KitchenIDontTrustYou
 {
-    public class Main : BaseMod
+    public class Main : IModInitializer
     {
-        // guid must be unique and is recommended to be in reverse domain name notation
-        // mod name that is displayed to the player and listed in the mods menu
-        // mod version must follow semver e.g. "1.2.3"
         public const string MOD_GUID = "IcedMilo.PlateUp.IDontTrustYou";
         public const string MOD_NAME = "I Don't Trust You";
-        public const string MOD_VERSION = "0.2.0";
+        public const string MOD_VERSION = "0.2.2";
         public const string MOD_AUTHOR = "IcedMilo";
         public const string MOD_GAMEVERSION = ">=1.1.1";
-        // Game version this mod is designed for in semver
-        // e.g. ">=1.1.1" current and all future
-        // e.g. ">=1.1.1 <=1.2.3" for all from/until
 
-        public Main() : base(MOD_GUID, MOD_NAME, MOD_AUTHOR, MOD_VERSION, MOD_GAMEVERSION, Assembly.GetExecutingAssembly()) { }
+        internal static PreferenceSystemManager PrefManager;
 
-        protected override void Initialise()
+        internal const string MULTIPLAYER_LOCK_SCRAPPER_ID = "multiplayerLockScrapper";
+        internal const string PREVENT_WORKSHOP_CRAFTING_ID = "preventWorkshopCrafting";
+        internal const string PREVENT_CRATE_PICK_UP_ID = "preventCratePickUp";
+        internal const string PREVENT_BLUEPRINT_PURCHASE_ID = "preventBlueprintPurchase";
+        internal const string PREVENT_FRANCHISE_SELECT_ID = "preventFranchiseSelect";
+        internal const string PREVENT_NO_CLIP_ID = "preventNoClip";
+
+        public Main()
         {
-            CodeInstruction instructions;
-            base.Initialise();
+            Harmony harmony = new Harmony(MOD_GUID);
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+        }
+
+        public void PostActivate(Mod mod)
+        {
             // For log file output so the official plateup support staff can identify if/which a mod is being used
             LogWarning($"{MOD_GUID} v{MOD_VERSION} in use!");
 
-            try
-            {
-                World.GetExistingSystem<TriggerWorkshopCrafting>().Enabled = false;
-            }
-            catch (NullReferenceException)
-            {
-                LogInfo("Could not disable system Kitchen.TriggerWorkshopCrafting! Are you in multiplayer as non-host?");
-            }
-            try
-            {
-                World.GetExistingSystem<ToggleFranchiseSelector>().Enabled = false;
-            }
-            catch (NullReferenceException)
-            {
-                LogInfo("Could not disable system Kitchen.ToggleFranchiseSelector! Are you in multiplayer as non-host?");
-            }
-            try
-            {
-                World.GetExistingSystem<LockScrapper>().Enabled = false;
-            }
-            catch (NullReferenceException)
-            {
-                LogInfo("Could not disable system Kitchen.LockScrapper! Are you in multiplayer as non-host?");
-            }
+
+            PrefManager = new PreferenceSystemManager(MOD_GUID, MOD_NAME);
+            PrefManager
+                .AddLabel("Lock Franchise Scrapper")
+                .AddOption<bool>(
+                    MULTIPLAYER_LOCK_SCRAPPER_ID,
+                    true,
+                    new bool[] { false, true },
+                    new string[] { "Never", "When non-host present" })
+                .AddLabel("Non-host Workshop Crafting")
+                .AddOption<bool>(
+                    PREVENT_WORKSHOP_CRAFTING_ID,
+                    true,
+                    new bool[] { true, false },
+                    new string[] { "Disallowed", "Allowed" })
+                .AddLabel("Non-host Workshop Crate Pickup")
+                .AddOption<bool>(
+                    PREVENT_CRATE_PICK_UP_ID,
+                    true,
+                    new bool[] { true, false },
+                    new string[] { "Disallowed", "Allowed" })
+                .AddLabel("Non-host Blueprint Purchase")
+                .AddOption<bool>(
+                    PREVENT_BLUEPRINT_PURCHASE_ID,
+                    true,
+                    new bool[] { true, false },
+                    new string[] { "Disallowed", "Allowed" })
+                .AddLabel("Non-host Select Franchise")
+                .AddOption<bool>(
+                    PREVENT_FRANCHISE_SELECT_ID,
+                    true,
+                    new bool[] { true, false },
+                    new string[] { "Disallowed", "Allowed" })
+                .AddLabel("No Clip")
+                .AddOption<bool>(
+                    PREVENT_NO_CLIP_ID,
+                    true,
+                    new bool[] { true, false },
+                    new string[] { "Disallowed", "Allowed" })
+                .AddSpacer()
+                .AddSpacer();
+
+            PrefManager.RegisterMenu(PreferenceSystemManager.MenuType.MainMenu);
+            PrefManager.RegisterMenu(PreferenceSystemManager.MenuType.PauseMenu);
         }
 
-        protected override void OnUpdate()
+        public void PreInject()
         {
-            
+
+        }
+
+        public void PostInject()
+        {
+            Helpers.InitFullColliderAppliances();
         }
 
         #region Logging
