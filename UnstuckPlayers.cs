@@ -29,14 +29,16 @@ namespace KitchenIDontTrustYou
                     for (int i = 0; i < entities.Length; i++)
                     {
                         Entity entity = entities[i];
+                        if (Has<CIsCraneMode>(entity))
+                            continue;
                         CPosition position = positions[i];
 
-                        CLayoutRoomTile tile = GetTile(position);
+                        CLayoutRoomTile tile = TileManager.GetTile(position);
                         if (!LayoutHelpers.IsInside(tile.Type))
                             continue;
                         int playerRoomID = tile.RoomID;
 
-                        Entity occupant = GetOccupant(position);
+                        Entity occupant = TileManager.GetOccupant(position);
                         if (occupant == default ||
                             !Require(occupant, out CAppliance appliance) ||
                             !Helpers.IsFullColliderAppliance(appliance.ID))
@@ -50,10 +52,10 @@ namespace KitchenIDontTrustYou
                         foreach (Vector3 offset in LayoutHelpers.AllNearbyRange2)
                         {
                             Vector3 candidatePos = position + offset;
-                            if (GetTile(candidatePos).RoomID != playerRoomID)
+                            if (TileManager.GetTile(candidatePos).RoomID != playerRoomID)
                                 continue;
 
-                            Entity offsetOccupant = GetOccupant(candidatePos);
+                            Entity offsetOccupant = TileManager.GetOccupant(candidatePos);
                             if (offsetOccupant != default &&
                                 Require(offsetOccupant, out appliance) &&
                                 Helpers.IsFullColliderAppliance(appliance.ID))

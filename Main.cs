@@ -2,7 +2,6 @@
 using KitchenMods;
 using PreferenceSystem;
 using System.Reflection;
-using UnityEngine;
 
 namespace KitchenIDontTrustYou
 {
@@ -10,7 +9,7 @@ namespace KitchenIDontTrustYou
     {
         public const string MOD_GUID = "IcedMilo.PlateUp.IDontTrustYou";
         public const string MOD_NAME = "I Don't Trust You";
-        public const string MOD_VERSION = "0.2.2";
+        public const string MOD_VERSION = "0.2.3";
         public const string MOD_AUTHOR = "IcedMilo";
         public const string MOD_GAMEVERSION = ">=1.1.1";
 
